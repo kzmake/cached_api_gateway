@@ -14,7 +14,8 @@ defmodule CachedApiGateway.Application do
     port = if is_binary(port), do: String.to_integer(port), else: port
 
     children = [
-      Plug.Adapters.Cowboy.child_spec(:http, CachedApiGateway.Router, [], [port: port])
+      supervisor(CachedApiGateway.Cache, []),
+      Plug.Adapters.Cowboy.child_spec(:http, CachedApiGateway.Router, [], port: port)
     ]
 
     opts = [strategy: :one_for_one, name: CachedApiGateway.Supervisor]

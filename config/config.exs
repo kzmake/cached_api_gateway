@@ -2,6 +2,11 @@
 # and its dependencies with the aid of the Mix.Config module.
 use Mix.Config
 
+config :cached_api_gateway, CachedApiGateway.Cache,
+  adapter: Nebulex.Adapters.Local,
+  # 24 hrs
+  gc_interval: 86_400
+
 # This configuration is loaded before any dependency and is restricted
 # to this project. If another project depends on this project, this
 # file won't be loaded nor affect the parent project. For this reason,

@@ -4,17 +4,20 @@ defmodule CachedApiGateway.Router do
   use Plug.Router
   import Rackla
 
-  plug :match
-  plug :dispatch
+  plug(:match)
+  plug(:dispatch)
 
   match "/api/", host: "jp-east-1.computing." do
     host = conn.host
     query_string = conn.query_string
     method = conn.method
 
-    %{method: method, url: "https://#{host}/api/", body: "#{query_string}"}
-    |> request
-    |> response
+    {_, _status_code, _headers, client_ref} =
+      :hackney.request(method, "https://#{host}/api/", [], "#{query_string}", [])
+
+    {:ok, body} = :hackney.body(client_ref)
+
+    body |> just |> response
   end
 
   match "/cached_api/", host: "jp-east-1.computing." do
@@ -22,9 +25,29 @@ defmodule CachedApiGateway.Router do
     query_string = conn.query_string
     method = conn.method
 
-    %{method: method, url: "https://#{host}/api/", body: "#{query_string}"}
-    |> request
-    |> response
+    [_ | [access_key_id | _]] = Regex.run(~r/.*AccessKeyId=([0-9A-Z]*).*/, query_string)
+    [_ | [action | _]] = Regex.run(~r/.*Action=([A-Za-z0-9]*).*/, query_string)
+
+    key = "#{access_key_id}#{action}"
+
+    body =
+      case CachedApiGateway.Cache.has_key?(key) do
+        true ->
+          IO.inspect("cached")
+          CachedApiGateway.Cache.get(key)
+
+        _ ->
+          IO.inspect("uncached")
+          {_, _status_code, _headers, client_ref} =
+            :hackney.request(method, "https://#{host}/api/", [], "#{query_string}", [])
+
+          {:ok, body} = :hackney.body(client_ref)
+          CachedApiGateway.Cache.set(key, body)
+
+          body
+      end
+
+    body |> just |> response
   end
 
   match _ do

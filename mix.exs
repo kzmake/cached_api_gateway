@@ -14,7 +14,7 @@ defmodule CachedApiGateway.MixProject do
 
   def application do
     [
-      applications: applications(Mix.env),
+      applications: applications(Mix.env()),
       mod: {CachedApiGateway.Application, []}
     ]
   end
@@ -27,7 +27,8 @@ defmodule CachedApiGateway.MixProject do
       {:rackla, "~> 1.2"},
       {:cowboy, "~> 1.0"},
       {:plug_cowboy, "~> 1.0"},
-      {:remix, "~> 0.0", only: :dev},
+      {:nebulex, "~> 1.0.0-rc.3"},
+      {:remix, "~> 0.0", only: :dev}
     ]
   end
 
