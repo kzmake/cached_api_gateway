@@ -6,23 +6,32 @@ defmodule CachedApiGateway.MixProject do
       app: :cached_api_gateway,
       version: "0.1.0",
       elixir: "~> 1.6",
-      start_permanent: Mix.env() == :prod,
-      deps: deps()
+      deps: deps(),
+      escript: escript(),
+      description: "Cached API gateway"
     ]
   end
 
-  # Run "mix help compile.app" to learn about applications.
   def application do
     [
-      extra_applications: [:logger]
+      applications: applications(Mix.env),
+      mod: {CachedApiGateway.Application, []}
     ]
   end
 
-  # Run "mix help deps" to learn about dependencies.
+  defp applications(:dev), do: applications(:all) ++ [:remix]
+  defp applications(_all), do: [:logger, :rackla, :cowboy]
+
   defp deps do
     [
-      # {:dep_from_hexpm, "~> 0.3.0"},
-      # {:dep_from_git, git: "https://github.com/elixir-lang/my_dep.git", tag: "0.1.0"},
+      {:rackla, "~> 1.2"},
+      {:cowboy, "~> 1.0"},
+      {:plug_cowboy, "~> 1.0"},
+      {:remix, "~> 0.0", only: :dev},
     ]
+  end
+
+  def escript do
+    [main_module: CachedApiGateway.Application]
   end
 end
